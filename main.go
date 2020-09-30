@@ -16,14 +16,14 @@ func main() {
 
 	// grab show data
 	schedule := spinitron.ShowSchedule{}
-	err := spinitron.GetShows(schedule)
+	err := spinitron.GetShows(&schedule)
 	if err != nil {
 		os.Exit(1)
 	}
 
 	c := cron.New()
 	c.AddFunc("@midnight", func() {
-		err = spinitron.GetShows(schedule)
+		err = spinitron.GetShows(&schedule)
 		if err != nil {
 			println("Unable to fetch Spinitron schedule")
 		}

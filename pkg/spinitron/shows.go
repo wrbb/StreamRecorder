@@ -26,18 +26,27 @@ type ShowSchedule struct {
 	Shows []Show
 }
 
-func (s ShowSchedule) AppendShow(show Show) {
+func (s *ShowSchedule) AppendShow(show Show) {
 	s.Shows = append(s.Shows, show)
 }
 
-func (s ShowSchedule) NextShowIsLive() bool {
-	if len(s.Shows) > 1 {
+func (s *ShowSchedule) NextShowIsLive() bool {
+	if len(s.Shows) > 0 {
 		return s.Shows[0].IsLive()
+	}
+	//fmt.Print("Not long enoguh")
+	return false
+}
+
+func (s *ShowSchedule) NextShowHasPassed() bool {
+	if len(s.Shows) > 0 {
+		return s.Shows[0].HasPast()
 	}
 	return false
 }
 
-func (s ShowSchedule) PopNextShow() (Show, error) {
+
+func (s *ShowSchedule) PopNextShow() (Show, error) {
 	if len(s.Shows) < 1 {
 		return Show{},  fmt.Errorf("No shows available")
 	}
