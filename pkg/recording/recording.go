@@ -33,8 +33,7 @@ func RecordShow(config pkg.Config, show spinitron.Show) error {
 		return err
 	}
 	showDirectory := fmt.Sprintf("%s/%s", config.StorageLocation, show.Name)
-	err = os.MkdirAll(showDirectory, 0755)
-	if err != nil {
+	if err = os.MkdirAll(showDirectory, 0755); err != nil {
 		fmt.Print(err)
 		return err
 	}
@@ -43,20 +42,11 @@ func RecordShow(config pkg.Config, show spinitron.Show) error {
 		fmt.Print(err)
 		return err
 	}
-	for show.IsLive() {
-		buffer := make([]byte, 1024)
-		_, err = response.Body.Read(buffer)
-		if err != nil {
-			fmt.Print(err)
-			return err
-		}
-		_, err = f.Write(buffer)
-		if err != nil {
-			fmt.Print(err)
-			return err
-		}
+	if _, err := copyShow(f,response.Body, show); err != nil {
+		fmt.Println(err)
+		return err
 	}
-
+	fmt.Printf("Finsihed recording %v", show.Name)
 	return nil
 }
 

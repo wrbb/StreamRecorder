@@ -50,7 +50,6 @@ func GetShows(schedule *ShowSchedule) error {
 	// Parse Response
 	spinitronResponse := spinitronResponse{}
 	body, err := ioutil.ReadAll(response.Body)
-	print(string(body))
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -61,7 +60,6 @@ func GetShows(schedule *ShowSchedule) error {
 		fmt.Println(err)
 		return err
 	}
-	fmt.Println("Len: ", len(spinitronResponse.Shows))
 	for _, showResponse := range spinitronResponse.Shows {
 		convertedShow := showResponse.convertToShow()
 		schedule.AppendShow(convertedShow)
