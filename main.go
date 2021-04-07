@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/robfig/cron/v3"
+	"text/template"
 	"net/http"
 	"os"
 	"wrbb-stream-recorder/pkg"
@@ -50,13 +51,20 @@ func main() {
 	_ = http.ListenAndServe(":1049", nil)
 }
 
+
+type DashboardData struct {
+	IsRecording bool
+	ShowName string
+}
+
 func Dashboard(w http.ResponseWriter, _ *http.Request) {
 	currentShow := recording.GetCurrentShow()
-	var status string
-	if currentShow.Id != 0 {
-		status = fmt.Sprintf("Currently recording %s", currentShow.Name)
-	} else {
-		status = "Not currently recording"
+	dashboardData := DashboardData{
+		IsRecording: currentShow != (spinitron.Show{}),
+		ShowName:  currentShow.Name,
 	}
-	_, _ = fmt.Fprint(w, "Vortex Stream Recorder is running!\n"+status)
+	w.Header().Add("Content Type", "text/html")
+	// The template name "template" does not matter here
+	tmpl := template.Must(template.ParseFiles("web/template/dashboard.html"))
+	tmpl.Execute(w, dashboardData)
 }

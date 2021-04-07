@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Vortex Status 🎧</title>
+    </head>
+    <body>
+    <h1>Vortex is currently {{if not .IsRecording}} not {{end}} recording {{if .IsRecording}} 🟢 {{else}} 🔴 {{end}}<h3>
+            {{if .IsRecording}} <h3>Currently recording {{.ShowName}} </h3> {{end}}
+    </body>
+</html>

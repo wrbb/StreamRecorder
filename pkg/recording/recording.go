@@ -22,7 +22,7 @@ func ScheduleLoop(schedule *spinitron.ShowSchedule, showChannel chan spinitron.S
 			if err == nil {
 				showChannel <- nextShow
 			}
-		} else {
+		} else if currentRecording == (spinitron.Show{}) {
 			fmt.Println("No show found")
 		}
 		time.Sleep(5 * time.Minute)
@@ -31,7 +31,13 @@ func ScheduleLoop(schedule *spinitron.ShowSchedule, showChannel chan spinitron.S
 
 // Records a given show from the config's mp3 url to the directory specified by config
 func RecordShow(config pkg.Config, show spinitron.Show) error {
+	// Used to debug
+	if config.TurnOffWrite {
+		return nil
+	}
+
 	response, err := http.Get(config.StreamURL)
+
 	if err != nil {
 		fmt.Print(err)
 		return err
@@ -62,6 +68,7 @@ func GetCurrentShow() spinitron.Show {
 	return currentRecording
 }
 
+// Goroutine for recording shows
 func RecordShowRoutine(config pkg.Config, showChannel chan spinitron.Show) {
 	for {
 		select {
