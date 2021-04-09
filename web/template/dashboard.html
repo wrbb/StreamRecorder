@@ -4,7 +4,10 @@
         <title>Vortex Status 🎧</title>
     </head>
     <body>
-    <h1>Vortex is currently {{if not .IsRecording}} not {{end}} recording {{if .IsRecording}} 🟢 {{else}} 🔴 {{end}}<h3>
-            {{if .IsRecording}} <h3>Currently recording {{.ShowName}} </h3> {{end}}
+    {{ range .}}
+    <h1> 🟢 Vortex is currently recording <a href="https://spinitron.com/WRBB/pl/{{.Id}}/{{.Name}}">{{.Name}}</a><h1>
+    {{else}}
+    <h1> 🔴 Vortex is not recording anything</h1>
+    {{end}}
     </body>
 </html>

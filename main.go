@@ -1,70 +1,35 @@
 package main
 
 import (
-	"fmt"
-	"github.com/robfig/cron/v3"
-	"text/template"
-	"net/http"
-	"os"
-	"wrbb-stream-recorder/pkg"
 	"wrbb-stream-recorder/pkg/recording"
+	"wrbb-stream-recorder/pkg/server"
 	"wrbb-stream-recorder/pkg/spinitron"
+	"wrbb-stream-recorder/pkg/util"
 )
 
+// main is the Starting point of the application
+// it initializes the config and the loggers, then
+// fetches the Spinitron schedule and starts two goroutines
+// one to update the schedule at midnight and one to record
+// shows, it then starts an http server to view the health of the application
 func main() {
 	// Load config
-	config := pkg.GetConfig()
+	util.InitConfig()
+	// Load loggers
+	util.InitLoggers()
 
-	// grab show data
-	schedule := spinitron.ShowSchedule{}
-	// Fetchs the schedule for the show queue
-	err := spinitron.FetchSchedule(&schedule)
+	// Create schedule
+	schedule, err := spinitron.CreateSchedule()
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "unable to fetch data from spinitron: %v", err.Error())
+		util.ErrorLogger.Printf("Unable to fetch spinitron schedule: %s\n", err.Error())
 	}
 
-	// Sets a cronjob for every night at midnight to update the show schedule
-	c := cron.New()
-	_, err = c.AddFunc("@midnight", func() {
-		err = spinitron.FetchSchedule(&schedule)
-		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "unable to fetch data from spinitron: %v", err.Error())
-		}
-	})
+	// Starts the show recording loop
+	go recording.ShowRecordingLoop(schedule)
 
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "unable to start cronjob for spinitron schedule: %v", err.Error())
-		os.Exit(1)
-	}
-	// Starts the cronjob
-	c.Start()
+	// Starts the schedule updating loop
+	go recording.UpdateScheduleLoop(schedule)
 
-	// Create the show channel
-	showChannel := make(chan spinitron.Show)
-
-	// Starts the recording goroutine
-	go recording.RecordShowRoutine(config, showChannel)
-	// Starts the schedule loop
-	go recording.ScheduleLoop(&schedule, showChannel)
-
-	http.HandleFunc("/", Dashboard)
-	_ = http.ListenAndServe(":1049", nil)
-}
-
-
-type DashboardData struct {
-	IsRecording bool
-	ShowName string
-}
-
-func Dashboard(w http.ResponseWriter, _ *http.Request) {
-	currentShow := recording.GetCurrentShow()
-	dashboardData := DashboardData{
-		IsRecording: currentShow != (spinitron.Show{}),
-		ShowName:  currentShow.Name,
-	}
-	w.Header().Add("Content Type", "text/html")
-	// The template name "template" does not matter here
-	tmpl := template.Must(template.ParseFiles("web/template/dashboard.html"))
-	tmpl.Execute(w, dashboardData)
+	// Start server
+	server.InitServer()
 }

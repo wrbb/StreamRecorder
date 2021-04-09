@@ -3,12 +3,30 @@ package spinitron
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"time"
+	"wrbb-stream-recorder/pkg/util"
 )
 
+
+const (
+	// DateFormat is used to format the Spinitron request/response dates
+	DateFormat = "2006-01-02T15:04:05-0700"
+	// URL is the Spinitron API url for viewing the schedule of shows
+	URL = "https://spinitron.com/api/shows?access-token=%s&count=%d&end=%s"
+	// Count is the maximum count of shows in the response
+	Count = 1000
+)
+
+// spinitronResponse represents the response from the
+// Spinitron API
+type spinitronResponse struct {
+	Shows []showResponse `json:"items"`
+}
+
+// showResponse
 type showResponse struct {
 	Id       int64  `json:"id"`
 	Start    string `json:"start"`
@@ -17,19 +35,19 @@ type showResponse struct {
 	Title    string `json:"title"`
 }
 
-const DateFormat = "2006-01-02T15:04:05-0700"
-const AccessToken = "ARdWnef9Fie7lKWspQzn5efv"
-const Count = 1000
-
+// convertToShow converts a Spinitron showResponse into a Show struct
 func (s showResponse) convertToShow() (Show, error) {
-	parsedStart, err := time.Parse(DateFormat, s.Start)
+	// Parse the start date and time of the show
+	parsedStart, err := time.ParseInLocation(DateFormat, s.Start, util.TimeLoc)
 	if err != nil {
 		return Show{}, fmt.Errorf("unable to parse start time: %v", s.Start)
 	}
-	parsedEnd, err := time.Parse(DateFormat, s.End)
+	// Parse the end date and time of the show
+	parsedEnd, err := time.ParseInLocation(DateFormat, s.End, util.TimeLoc)
 	if err != nil {
 		return Show{}, fmt.Errorf("unable to parse end time: %v", s.End)
 	}
+	// Creat the show object
 	return Show{
 		Id:       s.Id,
 		Name:     s.Title,
@@ -39,43 +57,28 @@ func (s showResponse) convertToShow() (Show, error) {
 	}, nil
 }
 
-type spinitronResponse struct {
-	Shows []showResponse `json:"items"`
-}
 
-func getMidnightTomorrow() string {
-	year, month, day := time.Now().Add(time.Hour * 24).Date()
-	return time.Date(year, month, day, 0, 0, 0, 0, time.Local).Format(DateFormat)
-}
 
-// Fetch's the spinitron schedule from the current time to midnight of current day
-func FetchSchedule(schedule *ShowSchedule) error {
-	// Get data from spinitron
-	url := fmt.Sprintf("https://spinitron.com/api/shows?access-token=%s&count=%d&end=%s", AccessToken, Count, getMidnightTomorrow())
-	response, err := http.Get(url)
+// getSpinitronSchedule makes a call to the Spinitron API to get the
+// current schedule from the current time till 00:00 the next day
+func getSpinitronSchedule() (response spinitronResponse, err error) {
+	// Get data from Spinitron
+	url := fmt.Sprintf(URL, viper.GetString(util.SpinitronAPIKey), Count, util.GetMidnight().Format(DateFormat))
+	httpResponse, err := http.Get(url)
 	if err != nil {
-		fmt.Println(err)
-		return err
+		return
 	}
-	defer response.Body.Close()
+	defer httpResponse.Body.Close()
 	// Parse Response
-	spinitronResponse := spinitronResponse{}
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := ioutil.ReadAll(httpResponse.Body)
 	if err != nil {
-		return err
+		return
 	}
 
-	err = json.Unmarshal(body, &spinitronResponse)
+	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return err
-	}
-	for _, showResponse := range spinitronResponse.Shows {
-		convertedShow, err := showResponse.convertToShow()
-		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "could not convert show, %v", err.Error())
-		}
-		schedule.AppendShow(convertedShow)
+		return
 	}
 
-	return nil
+	return
 }

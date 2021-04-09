@@ -2,12 +2,15 @@ package spinitron
 
 import (
 	"fmt"
+	"os"
+	"sync"
 	"time"
+	"wrbb-stream-recorder/pkg/util"
 )
 
-// A Struct to represent a spinitron show
+// A Struct to represent a Spinitron show
 type Show struct {
-	// The spinitron Id of the show
+	// The Spinitron Id of the show
 	Id int64
 	// The start time of the show
 	Start time.Time
@@ -33,39 +36,48 @@ func (s Show) HasPast() bool {
 
 // Struct to represent the scheduled shows
 type ShowSchedule struct {
-	Shows []Show
+	Schedule map[int]Show
+	Mu sync.Mutex
 }
 
-// Appends a show to the schedule
-func (s *ShowSchedule) AppendShow(show Show) {
-	s.Shows = append(s.Shows, show)
+// CreateSchedule creates a show schedule by requesting
+// the Spinitron API
+func CreateSchedule() (schedule *ShowSchedule, err error) {
+	schedule = &ShowSchedule{}
+	err = FetchSchedule(schedule)
+	return
 }
 
-// Returns true if the next show in schedule is currently live
-func (s *ShowSchedule) NextShowIsLive() bool {
-	if len(s.Shows) > 0 {
-		return s.Shows[0].IsLive()
+// FetchSchedule gets the show schedule from Spinitron's API
+// it writes the show the ShowSchedule passed in, using the mutex
+func FetchSchedule(schedule *ShowSchedule) (err error) {
+	util.InfoLogger.Println("Fetching Spinitron schedule")
+
+	response, err := getSpinitronSchedule()
+	if err != nil {
+		return
 	}
-	return false
+	shows := convertShows(response)
+
+	schedule.Mu.Lock()
+	schedule.Schedule = shows
+	schedule.Mu.Unlock()
+
+	return nil
 }
 
-// Returns true if the next show in schedule has already passed
-func (s *ShowSchedule) NextShowHasPassed() bool {
-	if len(s.Shows) > 0 {
-		return s.Shows[0].HasPast()
+// convertShows converts all the shows in the Spinitron response
+// to a map of ints representing the hour they start to Show structs
+func convertShows(response spinitronResponse) (shows map[int]Show) {
+	shows = map[int]Show{}
+	for _, showResponse := range response.Shows {
+		convertedShow, err := showResponse.convertToShow()
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "could not convert show, %v", err.Error())
+			os.Exit(1)
+		}
+		shows[convertedShow.Start.Hour()] = convertedShow
 	}
-	return false
-}
 
-// Pops the next show in the schedule off the schedule queue
-func (s *ShowSchedule) PopNextShow() (Show, error) {
-	if len(s.Shows) < 1 {
-		return Show{}, fmt.Errorf("No shows available from spinitron")
-	}
-
-	nextShow := s.Shows[0]
-	s.Shows[0] = Show{}
-	s.Shows = s.Shows[1:]
-
-	return nextShow, nil
+	return shows
 }

@@ -3,85 +3,109 @@ package recording
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 	"net/http"
 	"os"
+	"path"
+	"sync"
 	"time"
-	"wrbb-stream-recorder/pkg"
 	"wrbb-stream-recorder/pkg/spinitron"
+	"wrbb-stream-recorder/pkg/util"
 )
 
-// Loops through the schedule continutally and sends shows to showChannel when they
-// need to be recorded
-func ScheduleLoop(schedule *spinitron.ShowSchedule, showChannel chan spinitron.Show) {
+// ShowRecordingLoop is the goroutine used to continually
+// check if a show is starting and record it
+func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
 	for {
-		if schedule.NextShowHasPassed() {
-			_, _ = schedule.PopNextShow()
-			fmt.Print("Next show has already occurred")
-		} else if schedule.NextShowIsLive() {
-			nextShow, err := schedule.PopNextShow()
-			if err == nil {
-				showChannel <- nextShow
-			}
-		} else if currentRecording == (spinitron.Show{}) {
-			fmt.Println("No show found")
+		// Get the current time, hour and minute
+		now := time.Now()
+		hour := now.Hour()
+		// Lock the mutex
+		schedule.Mu.Lock()
+		// check if a show starts the current hour
+		if show, starting := schedule.Schedule[hour]; starting {
+			// If a show is starting now, delete show from schedule, then record
+			delete(schedule.Schedule, hour)
+			// Start a recording in a gorountine
+			go func() {
+				util.InfoLogger.Printf("Starting to record show %s", show.Name)
+				err := RecordShow(show)
+				if err != nil {
+					util.ErrorLogger.Printf("Unable to record show %s: %s\n", show.Name, err.Error())
+				}
+			}()
 		}
-		time.Sleep(5 * time.Minute)
+		// Unlock the mutex
+		schedule.Mu.Unlock()
+		// Sleep and check again in a minute
+		time.Sleep(time.Minute)
 	}
 }
 
-// Records a given show from the config's mp3 url to the directory specified by config
-func RecordShow(config pkg.Config, show spinitron.Show) error {
-	// Used to debug
-	if config.TurnOffWrite {
+// RecordShow Records a given show from the StreamURL to an mp3 named the current date to
+// a folder of the show names in the VortexStorageLocation directory for the shows duration
+func RecordShow(show spinitron.Show) error {
+	// Used to debug, if true, dont write show
+	if viper.GetBool(util.WriteShows) {
 		return nil
 	}
 
-	response, err := http.Get(config.StreamURL)
+	// Get a connection to the stream
+	response, err := http.Get(viper.GetString(util.StreamUrl))
+	if err != nil {
+		return err
+	}
 
-	if err != nil {
-		fmt.Print(err)
-		return err
-	}
-	showDirectory := fmt.Sprintf("%s/%s", config.StorageLocation, show.Name)
+	// Create the show directory
+	showDirectory := path.Join(viper.GetString(util.StorageLocation),show.Name)
 	if err = os.MkdirAll(showDirectory, 0755); err != nil {
-		fmt.Print(err)
 		return err
 	}
-	f, err := os.Create(fmt.Sprintf("%s/%s-%d-%d.mp3", showDirectory, show.Start.Month(), show.Start.Day(), show.Start.Year()))
+	// Get date for name of mp3
+	year, month, day := show.Start.Date()
+	// Create and open the mp3
+	f, err := os.Create(path.Join(showDirectory,
+		fmt.Sprintf("%s-%d-%d.mp3", month.String(), day, year)))
 	if err != nil {
-		fmt.Print(err)
 		return err
 	}
-	if _, err := copyShow(f, response.Body, show); err != nil {
-		fmt.Println(err)
-		return err
-	}
-	fmt.Printf("Finsihed recording %v", show.Name)
+
+	currentRecording.mu.Lock()
+	currentRecording.shows[show.Name] = show
+	currentRecording.mu.Unlock()
+	copyShow(f, response.Body, show.Duration, show.Name)
 	return nil
 }
 
-// The current show being recorded
-var currentRecording spinitron.Show
-
-// Gets the currently recording show
-func GetCurrentShow() spinitron.Show {
-	return currentRecording
+// currentRecording is a list of the current shows being recorded
+var currentRecording *struct {
+	mu sync.Mutex
+	shows map[string]spinitron.Show
 }
 
-// Goroutine for recording shows
-func RecordShowRoutine(config pkg.Config, showChannel chan spinitron.Show) {
+// Gets the currently recording show
+func GetCurrentShows() (shows []spinitron.Show) {
+	shows = []spinitron.Show{}
+	currentRecording.mu.Lock()
+	for _, show := range currentRecording.shows {
+		shows = append(shows, show)
+	}
+	currentRecording.mu.Unlock()
+	return
+}
+
+// UpdateScheduleLoop is the goroutine to continually update the
+// Spinitron spinitron.ShowSchedule at midnight every night
+func UpdateScheduleLoop(schedule *spinitron.ShowSchedule) {
+	timer := time.NewTimer(util.TimeUntilMidnight())
 	for {
 		select {
-		case show := <-showChannel:
-			currentRecording = show
-			err := RecordShow(config, show)
-			currentRecording = spinitron.Show{}
+		case <- timer.C:
+			err := spinitron.FetchSchedule(schedule)
 			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "Unable to record show %v: %v", show.Name, err)
+				util.ErrorLogger.Printf("Unable to fetch spinitron: %s\n", err.Error())
 			}
-		default:
-			// Sleep & try again
-			time.Sleep(time.Second)
+			timer.Reset(util.TimeUntilMidnight())
 		}
 	}
 }
