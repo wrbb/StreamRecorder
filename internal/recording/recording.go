@@ -9,8 +9,8 @@ import (
 	"path"
 	"sync"
 	"time"
-	"wrbb-stream-recorder/pkg/spinitron"
-	"wrbb-stream-recorder/pkg/util"
+	"wrbb-stream-recorder/internal/spinitron"
+	"wrbb-stream-recorder/internal/util"
 )
 
 // ShowRecordingLoop is the goroutine used to continually

@@ -19,7 +19,7 @@ var (
 // InfoLogger, WarningLogger and ErrorLogger
 func InitLoggers() {
 	// make log directory
-	err := os.MkdirAll(viper.GetString(LogDirectory), 0666)
+	err := os.MkdirAll(viper.GetString(LogDirectory), 0755)
 	if err != nil {
 		log.Fatal(err)
 	}

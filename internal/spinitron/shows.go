@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 	"time"
-	"wrbb-stream-recorder/pkg/util"
+	"wrbb-stream-recorder/internal/util"
 )
 
 // A Struct to represent a Spinitron show

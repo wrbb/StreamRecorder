@@ -3,7 +3,7 @@ package recording
 import (
 	"io"
 	"time"
-	"wrbb-stream-recorder/pkg/util"
+	"wrbb-stream-recorder/internal/util"
 )
 
 // I Have to make this file because I essentially need to do what io.Copy

@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
-	"wrbb-stream-recorder/pkg/util"
+	"wrbb-stream-recorder/internal/util"
 )
 
 

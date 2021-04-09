@@ -3,8 +3,8 @@ package server
 import (
 	"html/template"
 	"net/http"
-	"wrbb-stream-recorder/pkg/recording"
-	"wrbb-stream-recorder/pkg/util"
+	"wrbb-stream-recorder/internal/recording"
+	"wrbb-stream-recorder/internal/util"
 )
 
 // InitServer creates the http server

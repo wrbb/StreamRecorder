@@ -1,10 +1,10 @@
 package main
 
 import (
-	"wrbb-stream-recorder/pkg/recording"
-	"wrbb-stream-recorder/pkg/server"
-	"wrbb-stream-recorder/pkg/spinitron"
-	"wrbb-stream-recorder/pkg/util"
+	"wrbb-stream-recorder/internal/recording"
+	"wrbb-stream-recorder/internal/server"
+	"wrbb-stream-recorder/internal/spinitron"
+	"wrbb-stream-recorder/internal/util"
 )
 
 // main is the Starting point of the application
