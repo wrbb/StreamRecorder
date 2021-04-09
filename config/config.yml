@@ -1,0 +1,9 @@
+stream_url: http://stream.radiojar.com/9950r946bzzuv
+storage_location: ./storage
+
+debug:
+  log_directory: ./logs
+  write_shows: true
+
+spinitron:
+  api_key: REDACTED
