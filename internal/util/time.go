@@ -12,7 +12,7 @@ var TimeLoc *time.Location = MustLoadLocation("EST5EDT")
 // GetMidnight returns a time.Time of 00:00 the next day
 func GetMidnight() time.Time {
 	year, month, day := time.Now().Add(time.Hour * 24).Date()
-	return time.Date(year, month, day, 0, 0, 0, 0, time.Local)
+	return time.Date(year, month, day, 0, 0, 0, 0, TimeLoc)
 }
 
 // TimeUntilMidnight returns a time.Duration of the time

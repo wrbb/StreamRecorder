@@ -43,7 +43,9 @@ type ShowSchedule struct {
 // CreateSchedule creates a show schedule by requesting
 // the Spinitron API
 func CreateSchedule() (schedule *ShowSchedule, err error) {
-	schedule = &ShowSchedule{}
+	schedule = &ShowSchedule{
+		Mu: sync.Mutex{},
+	}
 	err = FetchSchedule(schedule)
 	return
 }
@@ -53,7 +55,8 @@ func CreateSchedule() (schedule *ShowSchedule, err error) {
 func FetchSchedule(schedule *ShowSchedule) (err error) {
 	util.InfoLogger.Println("Fetching Spinitron schedule")
 
-	response, err := getSpinitronSchedule()
+	var response spinitronResponse
+	response, err = getSpinitronSchedule()
 	if err != nil {
 		return
 	}

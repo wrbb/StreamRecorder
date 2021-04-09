@@ -16,6 +16,10 @@ import (
 // ShowRecordingLoop is the goroutine used to continually
 // check if a show is starting and record it
 func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
+	currentRecording = &currentRecordingStruct{
+		mu: sync.Mutex{},
+		shows: map[string]spinitron.Show{},
+	}
 	for {
 		// Get the current time, hour and minute
 		now := time.Now()
@@ -46,8 +50,8 @@ func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
 // a folder of the show names in the VortexStorageLocation directory for the shows duration
 func RecordShow(show spinitron.Show) error {
 	// Used to debug, if true, dont write show
-	if viper.GetBool(util.WriteShows) {
-		return nil
+	if !viper.GetBool(util.WriteShows) {
+		return fmt.Errorf("not writing show due to debug flag")
 	}
 
 	// Get a connection to the stream
@@ -77,11 +81,15 @@ func RecordShow(show spinitron.Show) error {
 	return nil
 }
 
-// currentRecording is a list of the current shows being recorded
-var currentRecording *struct {
+// currentRecordingStruct is the struct that represents the current
+// recording list and mutex to access it
+type currentRecordingStruct struct {
 	mu sync.Mutex
 	shows map[string]spinitron.Show
 }
+
+// currentRecording is a list of the current shows being recorded
+var currentRecording *currentRecordingStruct
 
 // Gets the currently recording show
 func GetCurrentShows() (shows []spinitron.Show) {
