@@ -75,6 +75,8 @@ func convertShows(response spinitronResponse) (shows map[int]Show) {
 	shows = map[int]Show{}
 	for _, showResponse := range response.Shows {
 		convertedShow, err := showResponse.convertToShow()
+		fmt.Println(convertedShow.Start)
+		fmt.Println(convertedShow.Name)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "could not convert show, %v", err.Error())
 			os.Exit(1)

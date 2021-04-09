@@ -1,3 +1,4 @@
+{{define "dashboard"}}
 <!DOCTYPE html>
 <html>
     <head>
@@ -5,9 +6,10 @@
     </head>
     <body>
     {{ range .}}
-    <h1> 🟢 Vortex is currently recording <a href="https://spinitron.com/WRBB/pl/{{.Id}}/{{.Name}}">{{.Name}}</a><h1>
+    <h1> 🟢 Vortex is currently recording <a href="https://spinitron.com/WRBB/show/{{.Id}}/{{nameFormat .Name}}">{{.Name}}</a></h1>
     {{else}}
     <h1> 🔴 Vortex is not recording anything</h1>
     {{end}}
     </body>
 </html>
+{{end}}

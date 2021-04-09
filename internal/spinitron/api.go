@@ -38,12 +38,12 @@ type showResponse struct {
 // convertToShow converts a Spinitron showResponse into a Show struct
 func (s showResponse) convertToShow() (Show, error) {
 	// Parse the start date and time of the show
-	parsedStart, err := time.ParseInLocation(DateFormat, s.Start, util.TimeLoc)
+	parsedStart, err := time.Parse(DateFormat, s.Start)
 	if err != nil {
 		return Show{}, fmt.Errorf("unable to parse start time: %v", s.Start)
 	}
 	// Parse the end date and time of the show
-	parsedEnd, err := time.ParseInLocation(DateFormat, s.End, util.TimeLoc)
+	parsedEnd, err := time.Parse(DateFormat, s.End)
 	if err != nil {
 		return Show{}, fmt.Errorf("unable to parse end time: %v", s.End)
 	}
@@ -52,8 +52,8 @@ func (s showResponse) convertToShow() (Show, error) {
 		Id:       s.Id,
 		Name:     s.Title,
 		Duration: time.Duration(s.Duration) * time.Second,
-		Start:    parsedStart,
-		End:      parsedEnd,
+		Start:    parsedStart.In(util.TimeLoc),
+		End:      parsedEnd.In(util.TimeLoc),
 	}, nil
 }
 
@@ -64,11 +64,16 @@ func (s showResponse) convertToShow() (Show, error) {
 func getSpinitronSchedule() (response spinitronResponse, err error) {
 	// Get data from Spinitron
 	url := fmt.Sprintf(URL, viper.GetString(util.SpinitronAPIKey), Count, util.GetMidnight().Format(DateFormat))
+	fmt.Println(url)
 	httpResponse, err := http.Get(url)
 	if err != nil {
 		return
 	}
+
 	defer httpResponse.Body.Close()
+	if httpResponse.StatusCode != 200 {
+		return response, fmt.Errorf("Given non 200 response")
+	}
 	// Parse Response
 	body, err := ioutil.ReadAll(httpResponse.Body)
 	if err != nil {
