@@ -77,7 +77,9 @@ func RecordShow(show spinitron.Show) error {
 	currentRecording.mu.Lock()
 	currentRecording.shows[show.Name] = show
 	currentRecording.mu.Unlock()
-	copyShow(f, response.Body, show.Duration, show.Name)
+
+	showTimeLeft := show.End.Sub(time.Now())
+	copyShow(f, response.Body, showTimeLeft, show.Name)
 	return nil
 }
 
@@ -91,7 +93,7 @@ type currentRecordingStruct struct {
 // currentRecording is a list of the current shows being recorded
 var currentRecording *currentRecordingStruct
 
-// Gets the currently recording show
+// GetCurrentShows Gets the currently recording show
 func GetCurrentShows() (shows []spinitron.Show) {
 	shows = []spinitron.Show{}
 	currentRecording.mu.Lock()
