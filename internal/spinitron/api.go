@@ -26,7 +26,8 @@ type spinitronResponse struct {
 	Shows []showResponse `json:"items"`
 }
 
-// showResponse
+// showResponse is a struct to represent show object
+// from Spinitron response
 type showResponse struct {
 	Id       int64  `json:"id"`
 	Start    string `json:"start"`

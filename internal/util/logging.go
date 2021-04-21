@@ -42,6 +42,8 @@ func InitLoggers() {
 	ErrorLogger = log.New(errorFile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
+// ErrorLog logs a message to the ErrorLogger in addition to sending a
+// message using the SlackClient
 func ErrorLog(msg string) {
 	err := SlackClient.SendMessage(fmt.Sprintf("Vortex Error: %s", msg))
 	if err != nil {

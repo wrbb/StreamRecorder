@@ -32,3 +32,5 @@ wrbb-stream-recorder
 storage/
 
 config/config.yml
+
+logs/

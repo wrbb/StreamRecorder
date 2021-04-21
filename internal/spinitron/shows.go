@@ -8,7 +8,7 @@ import (
 	"wrbb-stream-recorder/internal/util"
 )
 
-// A Struct to represent a Spinitron show
+// Show is a struct to represent a Spinitron show
 type Show struct {
 	// The Spinitron Id of the show
 	Id int64
@@ -22,7 +22,7 @@ type Show struct {
 	Duration time.Duration
 }
 
-// Returns true if the current show is live
+// IsLive returns true if the current show is live
 func (s Show) IsLive() bool {
 	now := time.Now()
 	return now.Before(s.End) && now.After(s.Start)
