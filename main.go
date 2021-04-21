@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"wrbb-stream-recorder/internal/recording"
 	"wrbb-stream-recorder/internal/server"
 	"wrbb-stream-recorder/internal/spinitron"
@@ -17,11 +18,13 @@ func main() {
 	util.InitConfig()
 	// Load loggers
 	util.InitLoggers()
+	// Load slack client
+	util.InitSlackClient()
 
 	// Create schedule
 	schedule, err := spinitron.CreateSchedule()
 	if err != nil {
-		util.ErrorLogger.Printf("Unable to fetch spinitron schedule: %s\n", err.Error())
+		util.ErrorLog(fmt.Sprintf("Unable to fetch spinitron schedule: %s\n", err.Error()))
 	}
 
 	// Starts the show recording loop
@@ -31,5 +34,5 @@ func main() {
 	go recording.UpdateScheduleLoop(schedule)
 
 	// Start server
-	server.InitServer()
+	server.InitServer(schedule)
 }

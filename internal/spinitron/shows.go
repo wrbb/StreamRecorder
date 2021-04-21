@@ -28,13 +28,13 @@ func (s Show) IsLive() bool {
 	return now.Before(s.End) && now.After(s.Start)
 }
 
-// Returns true if the show has passed
+// HasPast returns true if the show has passed
 func (s Show) HasPast() bool {
 	now := time.Now()
 	return now.After(s.End)
 }
 
-// Struct to represent the scheduled shows
+// ShowSchedule is a struct to represent the scheduled shows
 type ShowSchedule struct {
 	Schedule map[int]Show
 	Mu sync.Mutex
@@ -75,8 +75,6 @@ func convertShows(response spinitronResponse) (shows map[int]Show) {
 	shows = map[int]Show{}
 	for _, showResponse := range response.Shows {
 		convertedShow, err := showResponse.convertToShow()
-		fmt.Println(convertedShow.Start)
-		fmt.Println(convertedShow.Name)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "could not convert show, %v", err.Error())
 			os.Exit(1)

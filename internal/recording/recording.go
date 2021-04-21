@@ -35,7 +35,7 @@ func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
 				util.InfoLogger.Printf("Starting to record show %s", show.Name)
 				err := RecordShow(show)
 				if err != nil {
-					util.ErrorLogger.Printf("Unable to record show %s: %s\n", show.Name, err.Error())
+					util.ErrorLog(fmt.Sprintf("Unable to record show %s: %s\n", show.Name, err.Error()))
 				}
 			}()
 		}
@@ -113,7 +113,7 @@ func UpdateScheduleLoop(schedule *spinitron.ShowSchedule) {
 		case <- timer.C:
 			err := spinitron.FetchSchedule(schedule)
 			if err != nil {
-				util.ErrorLogger.Printf("Unable to fetch spinitron: %s\n", err.Error())
+				util.ErrorLog(fmt.Sprintf("Unable to fetch spinitron: %s\n", err.Error()))
 			}
 			timer.Reset(util.TimeUntilMidnight())
 		}

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
 	"log"
 	"os"
@@ -39,4 +40,12 @@ func InitLoggers() {
 	InfoLogger = log.New(logFile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 	WarningLogger = log.New(logFile, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
 	ErrorLogger = log.New(errorFile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+}
+
+func ErrorLog(msg string) {
+	err := SlackClient.SendMessage(fmt.Sprintf("Vortex Error: %s", msg))
+	if err != nil {
+		ErrorLogger.Print(err.Error())
+	}
+	ErrorLogger.Print(msg)
 }

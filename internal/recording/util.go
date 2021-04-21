@@ -1,6 +1,7 @@
 package recording
 
 import (
+	"fmt"
 	"io"
 	"time"
 	"wrbb-stream-recorder/internal/util"
@@ -65,7 +66,7 @@ func writeToFile(dst io.Writer, src io.Reader,  buf []byte, timer *time.Timer, n
 			}
 		}
 		if err != nil {
-			util.ErrorLogger.Printf("Error writing to file %s: %s", name, err.Error())
+			util.ErrorLog(fmt.Sprintf("Error writing to file %s: %s", name, err.Error()))
 			return
 		}
 	}

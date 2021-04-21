@@ -7,3 +7,7 @@ debug:
 
 spinitron:
   api_key: REDACTED
+
+
+slack:
+  feedback_webhook_url: REDACTED
