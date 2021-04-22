@@ -37,7 +37,7 @@ func (s Show) HasPast() bool {
 // ShowSchedule is a struct to represent the scheduled shows
 type ShowSchedule struct {
 	Schedule map[int]Show
-	Mu sync.Mutex
+	Mu       sync.Mutex
 }
 
 // CreateSchedule creates a show schedule by requesting

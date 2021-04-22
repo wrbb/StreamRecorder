@@ -10,7 +10,6 @@ import (
 	"wrbb-stream-recorder/internal/util"
 )
 
-
 const (
 	// DateFormat is used to format the Spinitron request/response dates
 	DateFormat = "2006-01-02T15:04:05-0700"
@@ -57,8 +56,6 @@ func (s showResponse) convertToShow() (Show, error) {
 		End:      parsedEnd.In(util.TimeLoc),
 	}, nil
 }
-
-
 
 // getSpinitronSchedule makes a call to the Spinitron API to get the
 // current schedule from the current time till 00:00 the next day

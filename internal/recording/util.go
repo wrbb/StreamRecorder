@@ -7,6 +7,8 @@ import (
 	"wrbb-stream-recorder/internal/util"
 )
 
+const BufferSize = 32 * 1024
+
 // I Have to make this file because I essentially need to do what io.Copy
 // is doing but I need it to stop once the show ends
 
@@ -14,21 +16,11 @@ import (
 // I couldn't figure it out and anything online I looked up didnt help so here we are!
 
 // copyShow is the actual implementation of Copy and CopyBuffer.
-func copyShow(dst io.Writer, src io.Reader, duration time.Duration, name string) {
-	var buf []byte
-	if buf == nil {
-		size := 32 * 1024
-		if l, ok := src.(*io.LimitedReader); ok && int64(size) > l.N {
-			if l.N < 1 {
-				size = 1
-			} else {
-				size = int(l.N)
-			}
-		}
-		buf = make([]byte, size)
-	}
+func copyShow(dst io.Writer, src io.ReadCloser, duration time.Duration, name string) {
+	buf := make([]byte, BufferSize)
 	timer := time.NewTimer(duration)
-	go writeToFile(dst, src, buf, timer, name)
+	defer src.Close()
+	writeToFile(dst, src, buf, timer, name)
 	return
 }
 

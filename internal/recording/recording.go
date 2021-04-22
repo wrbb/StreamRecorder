@@ -4,6 +4,7 @@ package recording
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"net"
 	"net/http"
 	"os"
 	"path"
@@ -47,18 +48,16 @@ func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
 }
 
 func createRequest() (*http.Response, error) {
-	tr := &http.Transport{
-		MaxIdleConnsPerHost: 1024,
-		TLSHandshakeTimeout: 0 * time.Second,
+	c := &http.Client{
+		Transport: &http.Transport{
+			DialContext: (&net.Dialer{
+				Timeout:   time.Hour,
+				KeepAlive: time.Hour,
+			}).DialContext,
+			TLSHandshakeTimeout: 0,
+		},
 	}
-	client := &http.Client{Transport: tr}
-	req, err := http.NewRequest("GET", viper.GetString(util.StreamUrl), nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Connection", "Keep-Alive")
-	req.Header.Set("Keep-Alive", fmt.Sprintf("timeout=%d,max=0", int(time.Hour.Seconds())))
-	return client.Do(req)
+	return c.Get(viper.GetString(util.StreamUrl))
 }
 
 // RecordShow Records a given show from the StreamURL to an mp3 named the current date to
@@ -94,7 +93,7 @@ func RecordShow(show spinitron.Show) error {
 	currentRecording.mu.Unlock()
 
 	showTimeLeft := show.End.Sub(time.Now())
-	copyShow(f, response.Body, showTimeLeft, show.Name)
+	go copyShow(f, response.Body, showTimeLeft, show.Name)
 	return nil
 }
 

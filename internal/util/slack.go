@@ -34,12 +34,12 @@ const DefaultSlackTimeout = 5 * time.Second
 // slackClient is the struct to represent the the slack client
 type slackClient struct {
 	WebHookUrl string
-	TimeOut     time.Duration
+	TimeOut    time.Duration
 }
 
 // SlackMessage is the struct to represent the slack message
 type SlackMessage struct {
-	Text        string       `json:"text,omitempty"`
+	Text string `json:"text,omitempty"`
 }
 
 // sendHttpRequest posts the slack message to the webhook url, thus

@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-
 // TimeLoc is the time zone the stream recording computer is in
 var TimeLoc *time.Location = MustLoadLocation("EST5EDT")
 
@@ -21,7 +20,6 @@ func TimeUntilMidnight() time.Duration {
 	midnight := GetMidnight()
 	return midnight.Sub(time.Now())
 }
-
 
 // MustLoadLocation loads a time.Location from a string
 // and will exit with code 1 if the timezone is not loaded

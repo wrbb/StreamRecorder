@@ -14,7 +14,6 @@ var (
 	ErrorLogger   *log.Logger
 )
 
-
 // InitLoggers initializes the loggers for the application
 // There are 3 loggers one for each logging level:
 // InfoLogger, WarningLogger and ErrorLogger
@@ -26,13 +25,13 @@ func InitLoggers() {
 	}
 
 	// Create the log file for warnings and info messages
-	logFile, err := os.OpenFile(path.Join(viper.GetString(LogDirectory), "main.log" ), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	logFile, err := os.OpenFile(path.Join(viper.GetString(LogDirectory), "main.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Creates the log file for error message
-	errorFile, err := os.OpenFile(path.Join(viper.GetString(LogDirectory) ,"error.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	errorFile, err := os.OpenFile(path.Join(viper.GetString(LogDirectory), "error.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}

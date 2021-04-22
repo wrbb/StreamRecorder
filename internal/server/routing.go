@@ -10,7 +10,6 @@ import (
 	"wrbb-stream-recorder/internal/util"
 )
 
-
 const DashboardTemplate = "web/template/dashboard.html"
 const ScheduleTemplate = "web/template/schedule.html"
 
@@ -21,14 +20,12 @@ func InitServer(schedule *spinitron.ShowSchedule) {
 	_ = http.ListenAndServe(":1049", nil)
 }
 
-
-
 // CreateScheduleViewHandler creates the handler function for the schedule view
 func CreateScheduleViewHandler(schedule *spinitron.ShowSchedule) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Add("Content Type", "text/html")
 		tmpl := template.Must(template.New("schedule").Funcs(template.FuncMap{
-			"nameFormat":  spinitronNameFormat,
+			"nameFormat": spinitronNameFormat,
 		}).ParseFiles(ScheduleTemplate))
 		err := tmpl.Execute(w, schedule.Schedule)
 		if err != nil {
@@ -39,14 +36,13 @@ func CreateScheduleViewHandler(schedule *spinitron.ShowSchedule) func(http.Respo
 	}
 }
 
-
 // Dashboard in the handler function for the http server's
 // index request
 func Dashboard(w http.ResponseWriter, _ *http.Request) {
 	currentShows := recording.GetCurrentShows()
 	w.Header().Add("Content Type", "text/html")
 	tmpl := template.Must(template.New("dashboard").Funcs(template.FuncMap{
-		"nameFormat":  spinitronNameFormat,
+		"nameFormat": spinitronNameFormat,
 	}).ParseFiles(DashboardTemplate))
 	err := tmpl.Execute(w, currentShows)
 	if err != nil {
@@ -63,7 +59,7 @@ func spinitronNameFormat(input string) string {
 		strings.ReplaceAll(
 			strings.ReplaceAll(input, " ", "-"),
 			"'", "-"),
-			func(r rune) bool {
-				return !syntax.IsWordChar(r)
+		func(r rune) bool {
+			return !syntax.IsWordChar(r)
 		})
 }
