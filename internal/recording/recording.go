@@ -17,7 +17,7 @@ import (
 // check if a show is starting and record it
 func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
 	currentRecording = &currentRecordingStruct{
-		mu: sync.Mutex{},
+		mu:    sync.Mutex{},
 		shows: map[string]spinitron.Show{},
 	}
 	for {
@@ -46,6 +46,21 @@ func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
 	}
 }
 
+func createRequest() (*http.Response, error) {
+	tr := &http.Transport{
+		MaxIdleConnsPerHost: 1024,
+		TLSHandshakeTimeout: 0 * time.Second,
+	}
+	client := &http.Client{Transport: tr}
+	req, err := http.NewRequest("GET", viper.GetString(util.StreamUrl), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Connection", "Keep-Alive")
+	req.Header.Set("Keep-Alive", fmt.Sprintf("timeout=%d,max=0", int(time.Hour.Seconds())))
+	return client.Do(req)
+}
+
 // RecordShow Records a given show from the StreamURL to an mp3 named the current date to
 // a folder of the show names in the VortexStorageLocation directory for the shows duration
 func RecordShow(show spinitron.Show) error {
@@ -55,13 +70,13 @@ func RecordShow(show spinitron.Show) error {
 	}
 
 	// Get a connection to the stream
-	response, err := http.Get(viper.GetString(util.StreamUrl))
+	response, err := createRequest()
 	if err != nil {
 		return err
 	}
 
 	// Create the show directory
-	showDirectory := path.Join(viper.GetString(util.StorageLocation),show.Name)
+	showDirectory := path.Join(viper.GetString(util.StorageLocation), show.Name)
 	if err = os.MkdirAll(showDirectory, 0755); err != nil {
 		return err
 	}
@@ -86,7 +101,7 @@ func RecordShow(show spinitron.Show) error {
 // currentRecordingStruct is the struct that represents the current
 // recording list and mutex to access it
 type currentRecordingStruct struct {
-	mu sync.Mutex
+	mu    sync.Mutex
 	shows map[string]spinitron.Show
 }
 
@@ -110,7 +125,7 @@ func UpdateScheduleLoop(schedule *spinitron.ShowSchedule) {
 	timer := time.NewTimer(util.TimeUntilMidnight())
 	for {
 		select {
-		case <- timer.C:
+		case <-timer.C:
 			err := spinitron.FetchSchedule(schedule)
 			if err != nil {
 				util.ErrorLog(fmt.Sprintf("Unable to fetch spinitron: %s\n", err.Error()))

@@ -34,7 +34,7 @@ func copyShow(dst io.Writer, src io.Reader, duration time.Duration, name string)
 
 // writeToFile continues to write to a file until the timer's channel receives a signal.
 // name is used for debugging and to remove the show from the current recording list
-func writeToFile(dst io.Writer, src io.Reader,  buf []byte, timer *time.Timer, name string) {
+func writeToFile(dst io.Writer, src io.Reader, buf []byte, timer *time.Timer, name string) {
 	var err error
 	for {
 		select {
@@ -66,6 +66,9 @@ func writeToFile(dst io.Writer, src io.Reader,  buf []byte, timer *time.Timer, n
 			}
 		}
 		if err != nil {
+			currentRecording.mu.Lock()
+			delete(currentRecording.shows, name)
+			currentRecording.mu.Unlock()
 			util.ErrorLog(fmt.Sprintf("Error writing to file %s: %s", name, err.Error()))
 			return
 		}
