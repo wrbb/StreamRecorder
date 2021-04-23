@@ -1,7 +1,6 @@
 package recording
 
 import (
-	"fmt"
 	"io"
 	"time"
 )
@@ -30,7 +29,7 @@ func writeToFile(dst io.Writer, src io.Reader, buf []byte, timer *time.Timer) er
 		select {
 		case <-timer.C:
 			// Show is over, stop recording
-			return fmt.Errorf("uh on")
+			return nil
 		default:
 			nr, er := src.Read(buf)
 			if nr > 0 {

@@ -116,6 +116,9 @@ func RecordShow(show spinitron.Show) error {
 	}
 
 	// Begin writing show to disk
+	if show.HasPast() {
+		return nil
+	}
 	return copyShow(f, response.Body, show.End.Sub(time.Now()))
 }
 
