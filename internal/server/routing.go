@@ -64,7 +64,7 @@ func spinitronNameFormat(input string) string {
 
 func removeNonWordCharacters(input string) string {
 	filter := func(r rune) rune {
-		if syntax.IsWordChar(r) {
+		if syntax.IsWordChar(r) || r == '-' {
 			return r
 		}
 		return -1

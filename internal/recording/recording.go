@@ -33,17 +33,21 @@ func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
 			delete(schedule.Schedule, hour)
 			// Start a recording in a goroutine
 			go func(s spinitron.Show) {
+				// Print beginning of show
 				util.InfoLogger.Printf("Starting to record show '%s'", s.Name)
+				// Give 5 retires for recording
 				retries := 5
 				for {
 					err := RecordShow(s)
 					if err == nil {
+						// If doesnt fail to record, print that the show is done and break from loop
 						util.InfoLogger.Printf("Finished recording show '%s'", s.Name)
 						break
 					}
 
 					if retries == 0 {
-						util.ErrorLog(fmt.Sprintf("unable to record show '%s': %s", s.Name, err.Error()))
+						// If fails after 5 times, state that the show failed to record, and break from loop
+						util.ErrorLog(fmt.Sprintf("Unable to record show '%s': %s", s.Name, err.Error()))
 						break
 					}
 					retries--
