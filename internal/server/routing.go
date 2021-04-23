@@ -55,11 +55,19 @@ func Dashboard(w http.ResponseWriter, _ *http.Request) {
 // spinitronNameFormat formats a spinitron show name into the
 // appropriate format for a spinitron show link
 func spinitronNameFormat(input string) string {
-	return strings.TrimFunc(
+	return removeNonWordCharacters(
 		strings.ReplaceAll(
-			strings.ReplaceAll(input, " ", "-"),
-			"'", "-"),
-		func(r rune) bool {
-			return !syntax.IsWordChar(r)
-		})
+			strings.ReplaceAll(
+				input, " ", "-"),
+			"'", "-"))
+}
+
+func removeNonWordCharacters(input string) string {
+	filter := func(r rune) rune {
+		if syntax.IsWordChar(r) {
+			return r
+		}
+		return -1
+	}
+	return strings.Map(filter, input)
 }

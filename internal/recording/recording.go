@@ -31,14 +31,25 @@ func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
 		if show, starting := schedule.Schedule[hour]; starting {
 			// If a show is starting now, delete show from schedule, then record
 			delete(schedule.Schedule, hour)
-			// Start a recording in a gorountine
-			go func() {
-				util.InfoLogger.Printf("Starting to record show %s", show.Name)
-				err := RecordShow(show)
-				if err != nil {
-					util.ErrorLog(fmt.Sprintf("Unable to record show %s: %s\n", show.Name, err.Error()))
+			// Start a recording in a goroutine
+			go func(s spinitron.Show) {
+				util.InfoLogger.Printf("Starting to record show '%s'", s.Name)
+				retries := 5
+				for {
+					err := RecordShow(s)
+					if err == nil {
+						util.InfoLogger.Printf("Finished recording show '%s'", s.Name)
+						break
+					}
+
+					if retries == 0 {
+						util.ErrorLog(fmt.Sprintf("unable to record show '%s': %s", s.Name, err.Error()))
+						break
+					}
+					retries--
+					util.WarningLogger.Printf("Failed to record show '%s': %s\tretrying...", s.Name, err.Error())
 				}
-			}()
+			}(show)
 		}
 		// Unlock the mutex
 		schedule.Mu.Unlock()
@@ -47,17 +58,34 @@ func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
 	}
 }
 
-func createRequest() (*http.Response, error) {
+// createRequest creates a get request to the stream
+// with a dial timeout/keep alive of timeout
+func createRequest(timeout time.Duration) (*http.Response, error) {
 	c := &http.Client{
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
-				Timeout:   time.Hour,
-				KeepAlive: time.Hour,
+				Timeout:   timeout,
+				KeepAlive: timeout,
 			}).DialContext,
 			TLSHandshakeTimeout: 0,
 		},
 	}
 	return c.Get(viper.GetString(util.StreamUrl))
+}
+
+// createRecordingFile creates the file to record the show to.
+func createRecordingFile(show spinitron.Show) (*os.File, error) {
+	// Create the show directory
+	showDirectory := path.Join(viper.GetString(util.StorageLocation), show.Name)
+	if err := os.MkdirAll(showDirectory, 0755); err != nil {
+		return nil, err
+	}
+
+	// create name of mp3 file
+	year, month, day := show.Start.Date()
+	filename := fmt.Sprintf("%s-%d-%d.mp3", month.String(), day, year)
+	// Create and open the mp3
+	return os.Create(path.Join(showDirectory,filename))
 }
 
 // RecordShow Records a given show from the StreamURL to an mp3 named the current date to
@@ -68,33 +96,24 @@ func RecordShow(show spinitron.Show) error {
 		return fmt.Errorf("not writing show due to debug flag")
 	}
 
+	ShowBeganRecording(show)
+	defer ShowEndedRecording(show)
 	// Get a connection to the stream
-	response, err := createRequest()
+	response, err := createRequest(show.Duration)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	// Create file to save show to
+	f, err := createRecordingFile(show)
 	if err != nil {
 		return err
 	}
 
-	// Create the show directory
-	showDirectory := path.Join(viper.GetString(util.StorageLocation), show.Name)
-	if err = os.MkdirAll(showDirectory, 0755); err != nil {
-		return err
-	}
-	// Get date for name of mp3
-	year, month, day := show.Start.Date()
-	// Create and open the mp3
-	f, err := os.Create(path.Join(showDirectory,
-		fmt.Sprintf("%s-%d-%d.mp3", month.String(), day, year)))
-	if err != nil {
-		return err
-	}
-
-	currentRecording.mu.Lock()
-	currentRecording.shows[show.Name] = show
-	currentRecording.mu.Unlock()
-
-	showTimeLeft := show.End.Sub(time.Now())
-	go copyShow(f, response.Body, showTimeLeft, show.Name)
-	return nil
+	// Begin writing show to disk
+	return copyShow(f, response.Body, time.Minute)
+	//return copyShow(f, response.Body, show.End.Sub(time.Now()))
 }
 
 // currentRecordingStruct is the struct that represents the current
@@ -106,6 +125,26 @@ type currentRecordingStruct struct {
 
 // currentRecording is a list of the current shows being recorded
 var currentRecording *currentRecordingStruct
+
+// ShowBeganRecording adds show to the list of currently
+// recording shows
+func ShowBeganRecording(show spinitron.Show) {
+	if currentRecording != nil {
+		currentRecording.mu.Lock()
+		currentRecording.shows[show.Name] = show
+		currentRecording.mu.Unlock()
+	}
+}
+
+// ShowEndedRecording removes show from the list of currently
+// recording shows
+func ShowEndedRecording(show spinitron.Show) {
+	if currentRecording != nil {
+		currentRecording.mu.Lock()
+		delete(currentRecording.shows, show.Name)
+		currentRecording.mu.Unlock()
+	}
+}
 
 // GetCurrentShows Gets the currently recording show
 func GetCurrentShows() (shows []spinitron.Show) {
