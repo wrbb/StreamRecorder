@@ -116,8 +116,7 @@ func RecordShow(show spinitron.Show) error {
 	}
 
 	// Begin writing show to disk
-	return copyShow(f, response.Body, time.Minute)
-	//return copyShow(f, response.Body, show.End.Sub(time.Now()))
+	return copyShow(f, response.Body, show.End.Sub(time.Now()))
 }
 
 // currentRecordingStruct is the struct that represents the current
