@@ -60,8 +60,12 @@ func (s showResponse) convertToShow() (Show, error) {
 // getSpinitronSchedule makes a call to the Spinitron API to get the
 // current schedule from the current time till 00:00 the next day
 func getSpinitronSchedule() (response spinitronResponse, err error) {
+	// get time till midnight
+	midnight := util.GetMidnight()
+	// Subtract 1 second to miss show at midnight tomorrow
+	midnight = midnight.Add(-1 * time.Second)
 	// Create URL with time and API Key
-	url := fmt.Sprintf(URL, viper.GetString(util.SpinitronAPIKey), Count, util.GetMidnight().Format(DateFormat))
+	url := fmt.Sprintf(URL, viper.GetString(util.SpinitronAPIKey), Count, midnight.Format(DateFormat))
 	// Make the GET request to the URL
 	httpResponse, err := http.Get(url)
 	if err != nil {
