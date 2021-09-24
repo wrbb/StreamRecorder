@@ -60,13 +60,15 @@ func FetchSchedule(schedule *ShowSchedule) (err error) {
 	if err != nil {
 		return
 	}
+	// Convert response to show structs
 	shows := convertShows(response)
 
+	// Assign shows to schedule
 	schedule.Mu.Lock()
 	schedule.Schedule = shows
 	schedule.Mu.Unlock()
 
-	return nil
+	return
 }
 
 // convertShows converts all the shows in the Spinitron response

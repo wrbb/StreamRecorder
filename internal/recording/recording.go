@@ -22,9 +22,8 @@ func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
 		shows: map[string]spinitron.Show{},
 	}
 	for {
-		// Get the current time, hour and minute
-		now := time.Now()
-		hour := now.Hour()
+		// Get the current hour
+		hour := time.Now().Hour()
 		// Lock the mutex
 		schedule.Mu.Lock()
 		// check if a show starts the current hour

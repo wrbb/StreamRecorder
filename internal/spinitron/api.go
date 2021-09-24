@@ -60,24 +60,27 @@ func (s showResponse) convertToShow() (Show, error) {
 // getSpinitronSchedule makes a call to the Spinitron API to get the
 // current schedule from the current time till 00:00 the next day
 func getSpinitronSchedule() (response spinitronResponse, err error) {
-	// Get data from Spinitron
+	// Create URL with time and API Key
 	url := fmt.Sprintf(URL, viper.GetString(util.SpinitronAPIKey), Count, util.GetMidnight().Format(DateFormat))
-	fmt.Println(url)
+	// Make the GET request to the URL
 	httpResponse, err := http.Get(url)
 	if err != nil {
 		return
 	}
 
+	// Close connection once the function exits
 	defer httpResponse.Body.Close()
+	// If the response status code is not 200, something went wrong
 	if httpResponse.StatusCode != 200 {
 		return response, fmt.Errorf("Given non 200 response")
 	}
-	// Parse Response
+	// Parse Response Body
 	body, err := ioutil.ReadAll(httpResponse.Body)
 	if err != nil {
 		return
 	}
 
+	// Prarse response body into response struct
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return
