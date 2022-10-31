@@ -34,3 +34,4 @@ storage/
 config/config.yml
 
 logs/
+config.yml

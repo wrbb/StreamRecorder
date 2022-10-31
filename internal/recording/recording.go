@@ -3,7 +3,6 @@ package recording
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"net"
 	"net/http"
 	"os"
@@ -12,6 +11,8 @@ import (
 	"time"
 	"wrbb-stream-recorder/internal/spinitron"
 	"wrbb-stream-recorder/internal/util"
+
+	"github.com/spf13/viper"
 )
 
 // ShowRecordingLoop is the goroutine used to continually
@@ -30,6 +31,8 @@ func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
 		if show, starting := schedule.Schedule[hour]; starting {
 			// If a show is starting now, delete show from schedule, then record
 			delete(schedule.Schedule, hour)
+			//log the show deletion
+			util.InfoLogger.Printf("Deleting show from schedule")
 			// Start a recording in a goroutine
 			go func(s spinitron.Show) {
 				// Print beginning of show
@@ -56,6 +59,8 @@ func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
 		}
 		// Unlock the mutex
 		schedule.Mu.Unlock()
+		// log mutex unlock
+		util.InfoLogger.Printf("Unlocking schedule mutex")
 		// Sleep and check again in a minute
 		time.Sleep(time.Minute)
 	}
@@ -88,7 +93,7 @@ func createRecordingFile(show spinitron.Show) (*os.File, error) {
 	year, month, day := show.Start.Date()
 	filename := fmt.Sprintf("%s-%d-%d.mp3", month.String(), day, year)
 	// Create and open the mp3
-	return os.Create(path.Join(showDirectory,filename))
+	return os.Create(path.Join(showDirectory, filename))
 }
 
 // RecordShow Records a given show from the StreamURL to an mp3 named the current date to
