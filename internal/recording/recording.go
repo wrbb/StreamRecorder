@@ -143,6 +143,8 @@ func ShowBeganRecording(show spinitron.Show) {
 		currentRecording.mu.Lock()
 		currentRecording.shows[show.Name] = show
 		currentRecording.mu.Unlock()
+		// log that show is being recorded
+		util.InfoLogger.Printf("[DEBUG] Recording show '%s'", show.Name)
 	}
 }
 
@@ -153,6 +155,8 @@ func ShowEndedRecording(show spinitron.Show) {
 		currentRecording.mu.Lock()
 		delete(currentRecording.shows, show.Name)
 		currentRecording.mu.Unlock()
+		// log that show is no longer being recorded
+		util.InfoLogger.Printf("[DEBUG] Finished recording show '%s'", show.Name)
 	}
 }
 
@@ -164,6 +168,8 @@ func GetCurrentShows() (shows []spinitron.Show) {
 		shows = append(shows, show)
 	}
 	currentRecording.mu.Unlock()
+	// log that shows are being returned
+	util.InfoLogger.Printf("[DEBUG] Returning shows: %v", shows)
 	return
 }
 
