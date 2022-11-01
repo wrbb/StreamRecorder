@@ -59,8 +59,6 @@ func ShowRecordingLoop(schedule *spinitron.ShowSchedule) {
 		}
 		// Unlock the mutex
 		schedule.Mu.Unlock()
-		// log mutex unlock
-		util.InfoLogger.Printf("Unlocking schedule mutex")
 		// Sleep and check again in a minute
 		time.Sleep(time.Minute)
 	}
