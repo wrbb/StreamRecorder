@@ -166,8 +166,6 @@ func GetCurrentShows() (shows []spinitron.Show) {
 		shows = append(shows, show)
 	}
 	currentRecording.mu.Unlock()
-	// log that shows are being returned
-	util.InfoLogger.Printf("[DEBUG] Returning shows: %v", shows)
 	return
 }
 

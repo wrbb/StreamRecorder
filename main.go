@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"wrbb-stream-recorder/internal/recording"
-	"wrbb-stream-recorder/internal/server"
 	"wrbb-stream-recorder/internal/spinitron"
 	"wrbb-stream-recorder/internal/util"
 )
@@ -34,5 +33,5 @@ func main() {
 	go recording.UpdateScheduleLoop(schedule)
 
 	// Start server
-	server.InitServer(schedule)
+	// server.InitServer(schedule)
 }
