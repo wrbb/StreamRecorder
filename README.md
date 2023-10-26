@@ -1,3 +1,6 @@
+# Depreciation
+Note: this system has been depreciated in favor of the new vortex webserver and a backend recorder.
+
 # StreamRecorder
 
 An internally built stream recorder for logging past shows
